@@ -17,9 +17,10 @@
 ;; along with this program; if not, write to the Free Software
 ;; Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-;; Version: 1.0.9
+;; Version: 1.1.0
 ;; Author: k1LoW (Kenichirou Oyama), <k1lowxb [at] gmail [dot] com> <k1low [at] 101000lab [dot] org>
 ;; URL: http://code.101000lab.org, http://trac.codecheck.in
+;; Collaborator : kitokitoki, <morihenotegami [at] gmail [dot] com>
 
 ;; Thanks to tomoya for using migemo and multiline advice.(1.0.9)
 
@@ -33,10 +34,13 @@
 ;; desired.  And put the following expression into your ~/.emacs.
 ;;
 ;; (require 'anything-hatena-bookmark)
+;; (setq anything-hatena-bookmark-samewindow t)
 ;;
 ;; And, you should execute `anything-hatena-bookmark-get-dump to reflesh dump file.
 
 ;;; Change Log
+;; 1.1.0:(kitokitoki) add some parameter variables about candidate-number-limit,
+;;       requires-pattern and window style.
 ;; 1.0.9:use migemo and multiline.
 ;; 1.0.8:suport new dump rss format (2009/01/21). modify trim function.
 ;; 1.0.7:suport new dump rss format.
@@ -57,6 +61,9 @@
 (require 'sha1)
 
 (defvar anything-hatena-bookmark-file "~/.hatenabookmark")
+(defvar anything-hatena-bookmark-candidate-number-limit 9999)
+(defvar anything-hatena-bookmark-requires-pattern 3)
+(defvar anything-hatena-bookmark-samewindow anything-samewindow)
 
 (defun anything-hatena-bookmark-get-dump ()
   "Get Hatena::Bookmark dump file."
@@ -102,12 +109,14 @@
     (kill-buffer (current-buffer))))
 
 (defvar anything-c-source-hatena-bookmark
-  '((name . "Hatena::Bookmark")
+  `((name . "Hatena::Bookmark")
     (init
      . (lambda ()
-         (call-process-shell-command
-          (concat "less -f " anything-hatena-bookmark-file)  nil (anything-candidate-buffer 'global))))
+           (with-current-buffer (anything-candidate-buffer 'global)
+             (insert-file-contents anything-hatena-bookmark-file))))
     (candidates-in-buffer)
+    (candidate-number-limit . ,anything-hatena-bookmark-candidate-number-limit)
+    (requires-pattern . ,anything-hatena-bookmark-requires-pattern)    
     (migemo)
     (multiline)
     (action
@@ -124,10 +133,11 @@
 (defun anything-hatena-bookmark ()
   "Search Hatena::Bookmark using `anything'."
   (interactive)
-  (unless (file-exists-p anything-hatena-bookmark-file)
-    (anything-hatena-bookmark-get-dump))
-  (anything
-   '(anything-c-source-hatena-bookmark) nil "Find Bookmark: " nil nil))
+  (let ((anything-samewindow anything-hatena-bookmark-samewindow))
+    (unless (file-exists-p anything-hatena-bookmark-file)
+      (anything-hatena-bookmark-get-dump))
+    (anything
+     '(anything-c-source-hatena-bookmark) nil "Find Bookmark: " nil nil)))
 
 (provide 'anything-hatena-bookmark)
 
