@@ -113,8 +113,9 @@
     (init
      . (lambda ()
            (with-current-buffer (anything-candidate-buffer 'global)
-             (insert-file-contents anything-hatena-bookmark-file))))
-    (candidates-in-buffer)
+             (let ((coding-system-for-read 'utf-8))
+               (insert-file-contents anything-hatena-bookmark-file)))))
+    (candidates . anything-candidates-in-buffer)
     (candidate-number-limit . ,anything-hatena-bookmark-candidate-number-limit)
     (requires-pattern . ,anything-hatena-bookmark-requires-pattern)    
     (migemo)
